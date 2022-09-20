@@ -4,13 +4,14 @@
 ;; TODO Transfer stuff from old config
 ;; TODO LSP
 ;; FIXME Issues with random pausing (GC?)
+;; FIXME Issues with font not loading
 
 ;; --- OPTIMIZATION --- 
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024));; 1mb
 
 ;; --- VARIABLES ---
-(defvar config-file "~/.emacs.d/init.el")
+(defvar config-file "~/.config/.emacs.d/init.el")
 
 ;; --- FUNCTIONS ---
 (defun goto-org ()
@@ -58,7 +59,7 @@
 (dolist (package my-package-list)
   (unless (package-installed-p package)
     (package-install package)))
-
+(setq use-package-always-ensure t)
 ;; -- DECLARATIONS --
 
 ;; - VIM EMULATION -
@@ -81,7 +82,7 @@
 
 (use-package evil-surround
   :config
-  (evil-surround-mode))
+  (global-evil-surround-mode))
 
 (use-package org-evil
   :hook 
@@ -95,6 +96,8 @@
 			  :prefix "SPC m")
   (my-leader-def 'normal
 		 "SPC" 'counsel-M-x
+		 ":" 'eval-expression
+		 ";" 'shell-command
 		 ;; SEARCH
 		 "/" 'swiper
 		 "?" 'swiper-backward
@@ -118,7 +121,7 @@
 		 "pp" 'projectile-switch-project
 		 "pf" 'projectile-find-file
 		 "pc" 'projectile-cleanup-known-projects
-		 "pd" 'projectile-discover-projects-in-directory
+		 "pd" 'projectile-dired
 		 "pi" 'projectile-invalidate-cache
 		 "pt" 'projectile-run-term
 		 ;; BUFFER
@@ -127,6 +130,9 @@
 		 "bn" 'evil-next-buffer
 		 "bp" 'evil-prev-buffer
 		 "bm" 'ibuffer
+		 ;; DIREd
+		 "d" 'dired
+		 "d" 'dired
 		 ;; WINDOWS
 		 "wj" 'evil-window-down
 		 "wk" 'evil-window-up
@@ -218,12 +224,20 @@
 ;; if you are ivy user
 (use-package lsp-ivy :ensure t :commands lsp-ivy-workspace-symbol)
 
+;; Python
 (use-package lsp-pyright
   :ensure t
   :hook (python-mode . (lambda ()
                           (require 'lsp-pyright)
                           (lsp))))  ; or lsp-deferred
 
+;; Rust
+(use-package rust-mode)
+
+;; Haskell
+(use-package haskell-mode)
+
+;; Common Lisp
 (use-package sly)
 
 (use-package tree-sitter :ensure t
@@ -244,14 +258,18 @@
 
 (use-package powerline
   :config
+  (setq powerline-gui-use-vcs-glyph t)
   (powerline-center-theme))
 
-(use-package gruvbox-theme
+(use-package gruber-darker-theme
   :config
-  (load-theme 'gruvbox-dark-soft t))
+  (load-theme 'gruber-darker t))
 
 (use-package hl-todo
   :config
+  (setq hl-todo-keyword-faces
+	'(("TODO" . "#7669d6")
+	  ("FIXME". "#ff4d67")))
   (global-hl-todo-mode))
 
 (use-package highlight-numbers
@@ -275,14 +293,6 @@
   :after ivy
   :config)
 
-(use-package all-the-icons-completion
-  :config
-  (all-the-icons-completion-mode))
-
-(use-package company-box
-  :after company
-  :hook (company-mode . company-box-mode))
-
 ;; --- SETTINGS ---
 
 ;; No startup
@@ -301,7 +311,7 @@
 (add-hook 'prog-mode-hook 'menu-bar--display-line-numbers-mode-relative)
 
 ;; Font
-(set-face-attribute 'default nil :font "UbuntuMonoDerivativePowerline Nerd Font"
+(set-face-attribute 'default nil :font "Iosevka"
 		    :height 160)
 
 ;; Set escape to C-g
@@ -311,7 +321,6 @@
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
 
-
 ;; Properly colored output in compilation buffers
 (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
@@ -319,8 +328,14 @@
 ;; Auto fill paragraph
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
 
+;; Much better scrolling
+(pixel-scroll-precision-mode)
+
 ;; Org agenda
 (setq org-directory "~/Dropbox/org/")
 (setq org-agenda-files (list org-directory))
+
+(setq org-todo-keyword-faces
+  '(("TODO" . (:foreground "gold" :weight bold))))
 
 ;; --- END ---
