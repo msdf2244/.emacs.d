@@ -31,6 +31,10 @@
   (ansi-color-apply-on-region compilation-filter-start (point))
   (toggle-read-only))
 
+(defun my-org-hook ()
+  (turn-on-auto-fill)
+  (org-superstar-mode))
+
 ;; --- PACKAGES ---
 
 ;; -- SETUP -- 
@@ -261,9 +265,11 @@
   (setq powerline-gui-use-vcs-glyph t)
   (powerline-center-theme))
 
-(use-package gruber-darker-theme
+(use-package doom-themes
   :config
-  (load-theme 'gruber-darker t))
+  (load-theme 'doom-gruvbox t))
+
+(use-package org-superstar)
 
 (use-package hl-todo
   :config
@@ -307,12 +313,15 @@
 ;; Disable tool-bar
 (tool-bar-mode -1)
 
+;;Disable menu bar 
+(menu-bar-mode -1)
+
 ;; Get relative line numbers in prog-mode
 (add-hook 'prog-mode-hook 'menu-bar--display-line-numbers-mode-relative)
 
 ;; Font
-(set-face-attribute 'default nil :font "Iosevka"
-		    :height 160)
+(set-face-attribute 'default nil :font "SF Mono"
+		    :height 120)
 
 ;; Set escape to C-g
 (global-set-key (kbd "<escape>") (kbd "C-g"))
@@ -326,7 +335,7 @@
 
 ;; -- ORG --
 ;; Auto fill paragraph
-(add-hook 'org-mode-hook 'turn-on-auto-fill)
+(add-hook 'org-mode-hook 'my-org-hook)
 
 ;; Much better scrolling
 (pixel-scroll-precision-mode)
@@ -337,5 +346,7 @@
 
 (setq org-todo-keyword-faces
   '(("TODO" . (:foreground "gold" :weight bold))))
+
+(scroll-bar-mode -1)
 
 ;; --- END ---
