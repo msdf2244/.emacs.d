@@ -8,7 +8,12 @@
 (setq read-process-output-max (* 1024 1024));; 1mb
 
 ;; --- VARIABLES ---
-(defvar config-file "~/.config/.emacs.d/init.el")
+
+(when (string= "darwin" system-type)
+ (defvar config-file "~/.emacs.d/init.el"))
+
+(when (string= "gnu/linux" system-type)
+ (defvar config-file "~/.config/.emacs.d/init.el"))
 
 (make-variable-buffer-local 'my-compilation-start-time)
 
@@ -263,8 +268,7 @@
 (use-package tree-sitter :ensure t
   :hook
   (python-mode . tree-sitter-hl-mode)
-  (c-mode . tree-sitter-hl-mode)
-  (lisp-mode . treee-sitter-hl-mode))
+  (c-mode . tree-sitter-hl-mode))
 
 (use-package tree-sitter-langs :ensure t)
 
@@ -348,7 +352,7 @@
 (global-set-key (kbd "C--") 'text-scale-decrease)
 
 ;; Much better scrolling
-(pixel-scroll-precision-mode)
+;; (pixel-scroll-precision-mode)
 
 
 ;; -- ORG -- 
@@ -361,3 +365,21 @@
   '(("TODO" . (:foreground "gold" :weight bold))))
 
 ;; --- END ---
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("b02eae4d22362a941751f690032ea30c7c78d8ca8a1212fdae9eecad28a3587f" "2ff9ac386eac4dffd77a33e93b0c8236bb376c5a5df62e36d4bfa821d56e4e20" default))
+ '(org-agenda-files
+   '("~/Dropbox/org/COSC3503.org" "/Users/marcusdefreitas/Dropbox/org/ENGL3213.org" "/Users/marcusdefreitas/Dropbox/org/COSC4303.org" "/Users/marcusdefreitas/Dropbox/org/THEO3133.org"))
+ '(package-selected-packages
+   '(org-superstar leetcode monokai-pro-theme gnuplot gnuplot-mode which-key use-package smartparens sly projectile powerline magit gruvbox-theme general evil-surround evil-commentary evil-collection counsel company))
+ '(warning-suppress-types '((comp))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
