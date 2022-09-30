@@ -337,8 +337,8 @@
 (add-hook 'prog-mode-hook 'menu-bar--display-line-numbers-mode-relative)
 
 ;; Font
-(set-face-attribute 'default nil :font "UbuntuMono Nerd Font"
-		    :height 120)
+(set-face-attribute 'default nil :font "Hack"
+		    :height 130)
 
 ;; Set escape to C-g
 (global-set-key (kbd "<escape>") (kbd "C-g"))
