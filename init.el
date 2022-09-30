@@ -1,9 +1,6 @@
 ;; --- TODOs --- 
-
-;; TODO make portable
-;; TODO Transfer stuff from old config
-;; TODO LSP
-;; FIXME Issues with random pausing (GC?)
+;; TODO Compilation buffer changes
+;; FIXME Issues with random pausing
 ;; FIXME Issues with font not loading
 
 ;; --- OPTIMIZATION --- 
@@ -12,6 +9,8 @@
 
 ;; --- VARIABLES ---
 (defvar config-file "~/.config/.emacs.d/init.el")
+
+(make-variable-buffer-local 'my-compilation-start-time)
 
 ;; --- FUNCTIONS ---
 (defun goto-org ()
@@ -24,6 +23,10 @@
   (interactive)
   (find-file config-file))
 
+(defun my-org-hook ()
+  (turn-on-auto-fill)
+  (org-superstar-mode))
+
 (require 'ansi-color)
 (defun colorize-compilation-buffer ()
   "Get colored output in compilation buffer"
@@ -31,9 +34,21 @@
   (ansi-color-apply-on-region compilation-filter-start (point))
   (toggle-read-only))
 
-(defun my-org-hook ()
-  (turn-on-auto-fill)
-  (org-superstar-mode))
+;; Get elapsed time for compilation in buffer
+(defun my-compilation-start-hook (proc) 
+  (setq my-compilation-start-time (current-time)))
+
+(defun my-compilation-finish-function (buf why)
+  (let* ((elapsed  (time-subtract nil my-compilation-start-time))
+         (msg (format "Elapsed: %s" (format-time-string "%T.%N" elapsed t))))
+    (save-excursion (goto-char (point-max)) (insert msg))
+    (message "Compilation %s: %s" (string-trim-right why) msg)))
+
+;; -- HOOKS -- 
+(add-hook 'compilation-start-hook #'my-compilation-start-hook)
+(add-hook 'compilation-finish-functions #'my-compilation-finish-function)
+(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
+(add-hook 'org-mode-hook 'my-org-hook)
 
 ;; --- PACKAGES ---
 
@@ -64,9 +79,10 @@
   (unless (package-installed-p package)
     (package-install package)))
 (setq use-package-always-ensure t)
-;; -- DECLARATIONS --
 
-;; - VIM EMULATION -
+;; -- CONFIG --
+
+;; Vim emulation
 (use-package evil
   :init
   (setq evil-want-keybinding nil)
@@ -92,7 +108,7 @@
   :hook 
   (org-mode . org-evil-mode))
 
-;; Used for leader keys
+;; Used for leader keybindings
 (use-package general
   :config
   (general-create-definer my-leader-def :prefix "SPC")
@@ -124,18 +140,18 @@
 		 ;; PROJECT
 		 "pp" 'projectile-switch-project
 		 "pf" 'projectile-find-file
-		 "pc" 'projectile-cleanup-known-projects
+		 "pc" 'projectile-compile-project
 		 "pd" 'projectile-dired
 		 "pi" 'projectile-invalidate-cache
 		 "pt" 'projectile-run-term
 		 ;; BUFFER
+		 "x" '(switch-to-buffer "*scratch*")
 		 "bb" 'counsel-switch-buffer
 		 "bd" 'evil-delete-buffer
 		 "bn" 'evil-next-buffer
 		 "bp" 'evil-prev-buffer
 		 "bm" 'ibuffer
-		 ;; DIREd
-		 "d" 'dired
+		 ;; DIRED
 		 "d" 'dired
 		 ;; WINDOWS
 		 "wj" 'evil-window-down
@@ -187,7 +203,7 @@
 
 (use-package swiper)
 
-;; - GIT -
+;; - VC -
 (use-package magit)
 
 ;; - COMPLETION - 
@@ -200,12 +216,13 @@
 
 ;; - CODE -
 
-;; Lisp IDE
+;; Error checking
 (use-package flycheck :ensure t
   :ensure t
   :hook
   (prog-mode . flycheck-mode))
 
+;; LSP -> Language Server Protocol (Code completion, error checking, etc...)
 (use-package lsp-mode
   :ensure t
   :init
@@ -215,7 +232,6 @@
          (c-mode . lsp)
          (c++-mode . lsp)
 	 (rust-mode . lsp)
-         ;; if you want which-key integration
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
 
@@ -225,7 +241,6 @@
   :config
   (setq lsp-ui-doc-enable nil))
 
-;; if you are ivy user
 (use-package lsp-ivy :ensure t :commands lsp-ivy-workspace-symbol)
 
 ;; Python
@@ -244,6 +259,7 @@
 ;; Common Lisp
 (use-package sly)
 
+;; Better syntax highlighting
 (use-package tree-sitter :ensure t
   :hook
   (python-mode . tree-sitter-hl-mode)
@@ -252,22 +268,25 @@
 
 (use-package tree-sitter-langs :ensure t)
 
-;; - UTILITY -
+;; - MISC -
 (use-package projectile)
 
-;; - COSMETICS -
 (use-package which-key
   :config
   (which-key-mode))
 
+(use-package smooth-scrolling
+  :config (smooth-scrolling-mode))
+
+;; - APPEARANCE -
 (use-package powerline
   :config
   (setq powerline-gui-use-vcs-glyph t)
   (powerline-center-theme))
 
-(use-package doom-themes
+(use-package gruber-darker-theme
   :config
-  (load-theme 'doom-gruvbox t))
+  (load-theme 'gruber-darker t))
 
 (use-package org-superstar)
 
@@ -282,10 +301,8 @@
   :config
   (highlight-numbers-mode))
 
-(use-package smooth-scrolling
-  :config (smooth-scrolling-mode))
 
-;; ALL THE ICONS
+;; ICONS
 (use-package all-the-icons-dired
   :config
   (all-the-icons-dired-mode))
@@ -301,7 +318,7 @@
 
 ;; --- SETTINGS ---
 
-;; No startup
+;; No startup screen
 (setq inhibit-startup-message t
       inhibit-startup-echo-area-message t)
 
@@ -310,17 +327,17 @@
       mac-command-key-is-meta t
       mac-command-modifier 'meta)
 
-;; Disable tool-bar
 (tool-bar-mode -1)
 
-;;Disable menu bar 
 (menu-bar-mode -1)
+
+(scroll-bar-mode -1)
 
 ;; Get relative line numbers in prog-mode
 (add-hook 'prog-mode-hook 'menu-bar--display-line-numbers-mode-relative)
 
 ;; Font
-(set-face-attribute 'default nil :font "SF Mono"
+(set-face-attribute 'default nil :font "UbuntuMono Nerd Font"
 		    :height 120)
 
 ;; Set escape to C-g
@@ -330,15 +347,11 @@
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
 
-;; Properly colored output in compilation buffers
-(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
-
-;; -- ORG --
-;; Auto fill paragraph
-(add-hook 'org-mode-hook 'my-org-hook)
-
 ;; Much better scrolling
 (pixel-scroll-precision-mode)
+
+
+;; -- ORG -- 
 
 ;; Org agenda
 (setq org-directory "~/Dropbox/org/")
@@ -346,7 +359,5 @@
 
 (setq org-todo-keyword-faces
   '(("TODO" . (:foreground "gold" :weight bold))))
-
-(scroll-bar-mode -1)
 
 ;; --- END ---
